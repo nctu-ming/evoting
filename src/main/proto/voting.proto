@@ -2,6 +2,10 @@ syntax = "proto2";
 
 package voting;
 
+option java_package = "tw.edu.nctu.cs.evoting";
+option java_multiple_files = true;
+option java_outer_classname = "EVotingProto";
+
 import "google/protobuf/timestamp.proto";
 
 service eVoting {
