@@ -69,19 +69,65 @@ public class EVotingServer {
 
     static class EVotingImpl extends eVotingGrpc.eVotingImplBase {
         @Override
-        public void getResult(ElectionName request, StreamObserver<ElectionResult> responseObserver) {
-            ElectionResult.Builder resultBuilder = ElectionResult.newBuilder();
-            resultBuilder.setStatus(200);
+        public void registerVoter(Voter request, StreamObserver<Status> responseObserver) {
+            Status response = Status.newBuilder().setCode(200).build();
 
-            VoteCount.Builder vcBuilder = VoteCount.newBuilder().setCount(temp_votes).setChoiceName(temp_name);
-            vcBuilder.setToken(
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void unregisterVoter(VoterName request, StreamObserver<Status> responseObserver) {
+            Status response = Status.newBuilder().setCode(200).build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void preAuth(VoterName request, StreamObserver<Challenge> responseObserver) {
+            Challenge response = Challenge.newBuilder().setValue(ByteString.copyFromUtf8(temp_auth_token)).build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void auth(AuthRequest request, StreamObserver<AuthToken> responseObserver) {
+            AuthToken response = AuthToken.newBuilder().setValue(ByteString.copyFromUtf8(temp_auth_token)).build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void createElection(Election request, StreamObserver<ElectionStatus> responseObserver) {
+            ElectionStatus response = ElectionStatus.newBuilder().setCode(200).build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void castVote(Vote request, StreamObserver<Status> responseObserver) {
+            Status response = Status.newBuilder().setCode(200).build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void getResult(ElectionName request, StreamObserver<ElectionResult> responseObserver) {
+            ElectionResult.Builder resultBuilder = ElectionResult.newBuilder().setStatus(200);
+
+            VoteCount.Builder vcBuilder = VoteCount.newBuilder().setCount(temp_votes).setChoiceName(temp_name).setToken(
                     AuthToken.newBuilder().setValue(ByteString.copyFromUtf8(temp_auth_token))
             );
             resultBuilder.addCount(vcBuilder);
 
-            ElectionResult result = resultBuilder.build();
+            ElectionResult response = resultBuilder.build();
 
-            responseObserver.onNext(result);
+            responseObserver.onNext(response);
             responseObserver.onCompleted();
         }
     }
