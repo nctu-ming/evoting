@@ -6,6 +6,7 @@ The goal of the project is to develop a remote electronic voting system.
 
 - Java Development Kit (11+)
 - Maven (3.8.5+)
+- libsodium (1.0.18+)
 
 ## 編譯 Jar
 
