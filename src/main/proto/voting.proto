@@ -13,7 +13,7 @@ service eVoting {
 	rpc UnregisterVoter(VoterName) returns (Status);
 	rpc PreAuth (VoterName) returns (Challenge);
 	rpc Auth (AuthRequest) returns (AuthToken);
-	rpc CreateElection (Election) returns (ElectionStatus);
+	rpc CreateElection (Election) returns (Status);
 	rpc CastVote (Vote) returns (Status);
 	rpc GetResult(ElectionName) returns (ElectionResult);
 }
@@ -55,10 +55,6 @@ message Election {
 	repeated string choices = 3;
 	required google.protobuf.Timestamp end_date = 4;
 	required AuthToken token = 5;
-}
-
-message ElectionStatus {
-	required int32 code = 1;
 }
 
 message Vote {

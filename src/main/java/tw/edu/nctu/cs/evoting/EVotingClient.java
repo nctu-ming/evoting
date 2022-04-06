@@ -67,7 +67,7 @@ public class EVotingClient {
         AuthToken token = AuthToken.newBuilder().setValue(ByteString.copyFromUtf8(temp_auth_token)).build();
 //        Election election = Election.newBuilder().setName(name).setGroups(0, group).setChoices(0, choices).setEndDate(date).setToken(token).build();
         Election election = Election.newBuilder().setName(name).setEndDate(date).setToken(token).build();
-        ElectionStatus status;
+        Status status;
 
         try {
             status = blockingStub.createElection(election);

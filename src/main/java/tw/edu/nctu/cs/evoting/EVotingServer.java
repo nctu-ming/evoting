@@ -101,8 +101,8 @@ public class EVotingServer {
         }
 
         @Override
-        public void createElection(Election request, StreamObserver<ElectionStatus> responseObserver) {
-            ElectionStatus response = ElectionStatus.newBuilder().setCode(200).build();
+        public void createElection(Election request, StreamObserver<Status> responseObserver) {
+            Status response = Status.newBuilder().setCode(200).build();
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
