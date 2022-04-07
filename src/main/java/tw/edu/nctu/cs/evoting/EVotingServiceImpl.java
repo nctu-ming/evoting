@@ -14,15 +14,26 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void registerVoter(Voter request, StreamObserver<Status> responseObserver) {
+        if (!request.isInitialized()) {
+            Status response = Status.newBuilder().setCode(2).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
+
         String userName = request.getName();
 
-        request.toByteArray();
+        // Voter with the same name already exists.
+        if (Globals.store.get(userName) != null) {
+            Status response = Status.newBuilder().setCode(1).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
 
-        String userGroup = request.getGroup();
-        String userPublicKey = request.getPublicKey().toStringUtf8();
+        Globals.store.put(userName, request.toByteArray());
 
         Status response = Status.newBuilder().setCode(0).build();
-
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }

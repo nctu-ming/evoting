@@ -7,6 +7,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +15,11 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class EVotingServerTest {
+    private static final Integer temp_votes = 123321;
+    private static final String temp_name = "test-name";
+    private static final String temp_group = "test-group";
+    private static final String temp_auth_token = "test-auth-token";
+
     /**
      * This rule manages automatic graceful shutdown for the registered servers and channels at the
      * end of test.
@@ -37,11 +43,15 @@ public class EVotingServerTest {
         eVotingGrpc.eVotingBlockingStub blockingStub = eVotingGrpc.newBlockingStub(
                 grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build()));
 
-        Voter request = Voter.newBuilder().setName("test-name").setGroup("test-group").setPublicKey(ByteString.copyFromUtf8("test-public-key")).build();
+        Voter request = Voter.newBuilder().setName(temp_name).setGroup(temp_group).setPublicKey(ByteString.copyFromUtf8(temp_auth_token)).build();
 
         Status response = blockingStub.registerVoter(request);
 
         assertEquals(0, response.getCode());
-    }
+        Assert.assertArrayEquals(request.toByteArray(), Globals.store.get(temp_name));
 
+        // Voter with the same name already exists
+        Status response1 = blockingStub.registerVoter(request);
+        assertEquals(1, response1.getCode());
+    }
 }
