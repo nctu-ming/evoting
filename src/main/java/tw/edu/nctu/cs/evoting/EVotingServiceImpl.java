@@ -1,12 +1,15 @@
 package tw.edu.nctu.cs.evoting;
 
 import com.google.protobuf.ByteString;
+import com.goterl.lazysodium.LazySodiumJava;
+import com.goterl.lazysodium.SodiumJava;
 import io.grpc.stub.StreamObserver;
 
 import java.util.logging.Logger;
 
 class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
     private static final Logger logger = Logger.getLogger(EVotingServiceImpl.class.getName());
+    LazySodiumJava lazySodium = new LazySodiumJava(new SodiumJava());
 
     private static final Integer temp_votes = 123321;
     private static final String temp_name = "Ming Wang";
@@ -48,7 +51,9 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void preAuth(VoterName request, StreamObserver<Challenge> responseObserver) {
-        Challenge response = Challenge.newBuilder().setValue(ByteString.copyFromUtf8(temp_auth_token)).build();
+        Challenge response = Challenge.newBuilder().setValue(ByteString.copyFrom(
+                lazySodium.randomBytesBuf(16)
+        )).build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();

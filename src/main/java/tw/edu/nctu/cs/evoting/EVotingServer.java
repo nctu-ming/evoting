@@ -2,8 +2,6 @@ package tw.edu.nctu.cs.evoting;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import tw.edu.nctu.cs.evoting.storage.ConcurrentHashMapKVStore;
-import tw.edu.nctu.cs.evoting.storage.KVStore;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
