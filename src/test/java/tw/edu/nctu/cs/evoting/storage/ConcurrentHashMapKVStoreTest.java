@@ -35,6 +35,10 @@ public class ConcurrentHashMapKVStoreTest {
         byte[] value = kv.get(genKey(testKeyPrefix, String.valueOf(1)));
 
         Assert.assertArrayEquals(value, getBytes(testValuePrefix, String.valueOf(1)));
+
+        byte[] value2 = kv.get("key-not-exists");
+
+        Assert.assertNull(value2);
     }
 
     @Test
@@ -50,7 +54,7 @@ public class ConcurrentHashMapKVStoreTest {
 
         kv.delete(genKey(testKeyPrefix, String.valueOf(1)));
 
-        assertEquals(testPutSize - 2, kv.syncMap.size());
+        assertEquals(testPutSize - 1, kv.syncMap.size());
     }
 
     @Test
