@@ -1,9 +1,10 @@
 package tw.edu.nctu.cs.evoting;
 
-import com.google.protobuf.ByteString;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.stub.StreamObserver;
+import tw.edu.nctu.cs.evoting.storage.ConcurrentHashMapKVStore;
+import tw.edu.nctu.cs.evoting.storage.KVStore;
+
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -14,17 +15,19 @@ import java.util.logging.Logger;
 public class EVotingServer {
     private static final Logger logger = Logger.getLogger(EVotingServer.class.getName());
 
-    private static final Integer temp_votes = 123321;
-    private static final String temp_name = "Ming Wang";
-    private static final String temp_auth_token = "test-auth-token";
+    final protected KVStore<String, byte[]> store;
 
     private Server server;
+
+    EVotingServer() {
+        this.store = new ConcurrentHashMapKVStore();
+    }
 
     private void start() throws IOException {
         /* The port on which the server should run */
         int port = 50051;
         server = ServerBuilder.forPort(port)
-                .addService(new EVotingImpl())
+                .addService(new EVotingServiceImpl())
                 .build()
                 .start();
         logger.info("Server started, listening on " + port);
@@ -65,70 +68,5 @@ public class EVotingServer {
         final EVotingServer server = new EVotingServer();
         server.start();
         server.blockUntilShutdown();
-    }
-
-    static class EVotingImpl extends eVotingGrpc.eVotingImplBase {
-        @Override
-        public void registerVoter(Voter request, StreamObserver<Status> responseObserver) {
-            Status response = Status.newBuilder().setCode(200).build();
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        }
-
-        @Override
-        public void unregisterVoter(VoterName request, StreamObserver<Status> responseObserver) {
-            Status response = Status.newBuilder().setCode(200).build();
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        }
-
-        @Override
-        public void preAuth(VoterName request, StreamObserver<Challenge> responseObserver) {
-            Challenge response = Challenge.newBuilder().setValue(ByteString.copyFromUtf8(temp_auth_token)).build();
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        }
-
-        @Override
-        public void auth(AuthRequest request, StreamObserver<AuthToken> responseObserver) {
-            AuthToken response = AuthToken.newBuilder().setValue(ByteString.copyFromUtf8(temp_auth_token)).build();
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        }
-
-        @Override
-        public void createElection(Election request, StreamObserver<Status> responseObserver) {
-            Status response = Status.newBuilder().setCode(200).build();
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        }
-
-        @Override
-        public void castVote(Vote request, StreamObserver<Status> responseObserver) {
-            Status response = Status.newBuilder().setCode(200).build();
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        }
-
-        @Override
-        public void getResult(ElectionName request, StreamObserver<ElectionResult> responseObserver) {
-            ElectionResult.Builder resultBuilder = ElectionResult.newBuilder().setStatus(200);
-
-            VoteCount.Builder vcBuilder = VoteCount.newBuilder().setCount(temp_votes).setChoiceName(temp_name).setToken(
-                    AuthToken.newBuilder().setValue(ByteString.copyFromUtf8(temp_auth_token))
-            );
-            resultBuilder.addCount(vcBuilder);
-
-            ElectionResult response = resultBuilder.build();
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        }
     }
 }

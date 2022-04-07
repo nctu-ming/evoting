@@ -32,7 +32,7 @@ public class EVotingServerTest {
 
         // Create a server, add service, start, and register for automatic graceful shutdown.
         grpcCleanup.register(InProcessServerBuilder
-                .forName(serverName).directExecutor().addService(new EVotingServer.EVotingImpl()).build().start());
+                .forName(serverName).directExecutor().addService(new EVotingServiceImpl()).build().start());
 
         eVotingGrpc.eVotingBlockingStub blockingStub = eVotingGrpc.newBlockingStub(
                 grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build()));
