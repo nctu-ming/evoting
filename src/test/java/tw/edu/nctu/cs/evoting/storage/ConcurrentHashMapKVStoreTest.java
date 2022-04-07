@@ -58,6 +58,22 @@ public class ConcurrentHashMapKVStoreTest {
     }
 
     @Test
+    public void testClear() {
+        ConcurrentHashMapKVStore kv = new ConcurrentHashMapKVStore();
+
+        for (Integer i = 0; i < testPutSize; i++) {
+            kv.put(
+                    genKey(testKeyPrefix, i.toString()),
+                    getBytes(testValuePrefix, i.toString())
+            );
+        }
+
+        kv.clear();
+
+        assertEquals(0, kv.syncMap.size());
+    }
+
+    @Test
     public void testPut() {
         ConcurrentHashMapKVStore kv = new ConcurrentHashMapKVStore();
 

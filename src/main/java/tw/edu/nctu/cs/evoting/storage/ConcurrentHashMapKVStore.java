@@ -23,4 +23,9 @@ public class ConcurrentHashMapKVStore implements KVStore<String, byte[]> {
     public void delete(String key) {
         this.syncMap.remove(key);
     }
+
+    @Override
+    public void clear() {
+        this.syncMap.clear();
+    }
 }
