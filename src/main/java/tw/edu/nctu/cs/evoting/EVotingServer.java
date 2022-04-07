@@ -15,13 +15,7 @@ import java.util.logging.Logger;
 public class EVotingServer {
     private static final Logger logger = Logger.getLogger(EVotingServer.class.getName());
 
-    final protected KVStore<String, byte[]> store;
-
     private Server server;
-
-    EVotingServer() {
-        this.store = new ConcurrentHashMapKVStore();
-    }
 
     private void start() throws IOException {
         /* The port on which the server should run */
