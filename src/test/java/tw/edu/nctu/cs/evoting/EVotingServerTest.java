@@ -1,8 +1,5 @@
 package tw.edu.nctu.cs.evoting;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.protobuf.ByteString;
 import com.goterl.lazysodium.LazySodiumJava;
@@ -23,6 +20,8 @@ import org.junit.runners.JUnit4;
 import tw.edu.nctu.cs.evoting.dao.UserDao;
 
 import java.util.logging.Level;
+
+import static org.junit.Assert.*;
 
 @RunWith(JUnit4.class)
 public class EVotingServerTest {
@@ -85,6 +84,11 @@ public class EVotingServerTest {
         Challenge challenge = blockingStub.preAuth(request);
 
         assertEquals(16, challenge.getValue().toByteArray().length);
+
+        byte[] randomBytes = Globals.store.get("user_challenge_" + temp_name);
+        assertArrayEquals(challenge.getValue().toByteArray(), randomBytes);
+
+        Globals.store.clear();
     }
 
     @Test

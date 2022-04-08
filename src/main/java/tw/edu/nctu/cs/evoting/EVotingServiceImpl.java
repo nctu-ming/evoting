@@ -49,9 +49,11 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void preAuth(VoterName request, StreamObserver<Challenge> responseObserver) {
-        Challenge response = Challenge.newBuilder().setValue(ByteString.copyFrom(
-                lazySodium.randomBytesBuf(16)
-        )).build();
+        byte[] randomBytes = lazySodium.randomBytesBuf(16);
+
+        Challenge response = Challenge.newBuilder().setValue(ByteString.copyFrom(randomBytes)).build();
+
+        Globals.store.put("user_challenge_" + request.getName().toString(), randomBytes);
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
