@@ -1,35 +1,15 @@
 package tw.edu.nctu.cs.evoting;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.google.protobuf.ByteString;
-import com.goterl.lazysodium.LazySodium;
 import com.goterl.lazysodium.LazySodiumJava;
-import com.goterl.lazysodium.Sodium;
 import com.goterl.lazysodium.SodiumJava;
-import com.goterl.lazysodium.exceptions.SodiumException;
-import com.goterl.lazysodium.interfaces.KeyExchange;
-import com.goterl.lazysodium.interfaces.Sign;
-import com.goterl.lazysodium.utils.Key;
-import com.goterl.lazysodium.utils.KeyPair;
 import io.grpc.stub.StreamObserver;
 import tw.edu.nctu.cs.evoting.dao.UserDao;
-import tw.edu.nctu.cs.evoting.util.JwtManager;
-
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.logging.Logger;
 
 class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
     private static final Logger logger = Logger.getLogger(EVotingServiceImpl.class.getName());
     LazySodiumJava lazySodium = new LazySodiumJava(new SodiumJava());
-
-    private static final Integer temp_votes = 123321;
-    private static final String temp_name = "Ming Wang";
-    private static final String temp_auth_token = "test-auth-token";
 
     private final UserDao userDao = new UserDao(Globals.store);
 
@@ -130,8 +110,8 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
     public void getResult(ElectionName request, StreamObserver<ElectionResult> responseObserver) {
         ElectionResult.Builder resultBuilder = ElectionResult.newBuilder().setStatus(200);
 
-        VoteCount.Builder vcBuilder = VoteCount.newBuilder().setCount(temp_votes).setChoiceName(temp_name).setToken(
-                AuthToken.newBuilder().setValue(ByteString.copyFromUtf8(temp_auth_token))
+        VoteCount.Builder vcBuilder = VoteCount.newBuilder().setCount(123321).setChoiceName("Ming Wang").setToken(
+                AuthToken.newBuilder().setValue(ByteString.copyFromUtf8("test-auth-token"))
         );
         resultBuilder.addCount(vcBuilder);
 
