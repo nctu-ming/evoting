@@ -1,8 +1,15 @@
 package tw.edu.nctu.cs.evoting;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.protobuf.ByteString;
+import com.goterl.lazysodium.LazySodiumJava;
+import com.goterl.lazysodium.SodiumJava;
+import com.goterl.lazysodium.interfaces.Sign;
+import com.goterl.lazysodium.utils.Key;
+import com.goterl.lazysodium.utils.KeyPair;
 import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
@@ -13,6 +20,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import tw.edu.nctu.cs.evoting.dao.UserDao;
 
 import java.util.logging.Level;
 
@@ -51,11 +59,13 @@ public class EVotingServerTest {
         Status response = blockingStub.registerVoter(request);
 
         assertEquals(0, response.getCode());
-        Assert.assertArrayEquals(request.toByteArray(), Globals.store.get(temp_name));
+        Assert.assertArrayEquals(request.toByteArray(), Globals.store.get(UserDao.genUserKey(temp_name)));
 
         // Voter with the same name already exists
         Status response1 = blockingStub.registerVoter(request);
         assertEquals(1, response1.getCode());
+
+        Globals.store.clear();
     }
 
     @Test
@@ -75,5 +85,51 @@ public class EVotingServerTest {
         Challenge challenge = blockingStub.preAuth(request);
 
         assertEquals(16, challenge.getValue().toByteArray().length);
+    }
+
+    @Test
+    public void RVotingServiceImpl_auth() throws Exception {
+        // Generate a unique in-process server name.
+        String serverName = InProcessServerBuilder.generateName();
+
+        // Create a server, add service, start, and register for automatic graceful shutdown.
+        grpcCleanup.register(InProcessServerBuilder
+                .forName(serverName).directExecutor().addService(new EVotingServiceImpl()).build().start());
+
+        eVotingGrpc.eVotingBlockingStub blockingStub = eVotingGrpc.newBlockingStub(
+                grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build()));
+
+        LazySodiumJava lazySodium = new LazySodiumJava(new SodiumJava());
+
+        KeyPair kp = lazySodium.cryptoSignKeypair();
+        Key pk = kp.getPublicKey();
+        Key sk = kp.getSecretKey();
+        lazySodium.cryptoSignKeypair(pk.getAsBytes(), sk.getAsBytes());
+
+        // insert test data
+        Voter testVoter = Voter.newBuilder().setName(temp_name).setGroup(temp_group).setPublicKey(ByteString.copyFrom(pk.getAsBytes())).build();
+        byte[] testRandomBytes = lazySodium.randomBytesBuf(16);
+        Globals.store.put("user_" + temp_name, testVoter.toByteArray());
+        Globals.store.put("user_challenge_" + temp_name, testRandomBytes);
+
+        // client crypto_sign_detached
+        byte[] signatureBytes = new byte[Sign.BYTES];
+        lazySodium.cryptoSignDetached(signatureBytes, testRandomBytes, testRandomBytes.length, sk.getAsBytes());
+
+        // gRPC request
+        VoterName voterName = VoterName.newBuilder().setName(temp_name).build();
+        Response res = Response.newBuilder().setValue(ByteString.copyFrom(signatureBytes)).build();
+        AuthRequest request = AuthRequest.newBuilder().setName(voterName).setResponse(res).build();
+
+        AuthToken token = blockingStub.auth(request);
+
+        String authToken = token.getValue().toStringUtf8();
+
+        assertTrue(Globals.jwtManager.validateToken(authToken));
+        DecodedJWT decodedJwt = Globals.jwtManager.decodedJWT(authToken);
+
+        assertEquals(temp_name, decodedJwt.getClaim("username").asString());
+
+        Globals.store.clear();
     }
 }
