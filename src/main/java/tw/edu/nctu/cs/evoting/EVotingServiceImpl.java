@@ -102,8 +102,8 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void createElection(Election request, StreamObserver<Status> responseObserver) {
-        String jwtToken = request.getToken().toString();
-        if(!Globals.jwtManager.validateToken(jwtToken)) {
+        String authToken = request.getToken().getValue().toStringUtf8();
+        if(!Globals.jwtManager.validateToken(authToken)) {
             // Invalid authentication token
             Status response = Status.newBuilder().setCode(1).build();
             responseObserver.onNext(response);
