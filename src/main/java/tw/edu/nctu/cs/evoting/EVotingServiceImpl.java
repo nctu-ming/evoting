@@ -1,5 +1,6 @@
 package tw.edu.nctu.cs.evoting;
 
+import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.protobuf.ByteString;
 import com.goterl.lazysodium.LazySodiumJava;
@@ -9,6 +10,7 @@ import tw.edu.nctu.cs.evoting.dao.UserDao;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.logging.Logger;
 
 class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
@@ -139,8 +141,33 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void castVote(Vote request, StreamObserver<Status> responseObserver) {
-        Status response = Status.newBuilder().setCode(200).build();
+        String jwtToken = request.getToken().toString();
+        DecodedJWT dJwt = Globals.jwtManager.decodedJWT(jwtToken);
 
+        if(dJwt == null) {
+            // Invalid authentication token
+            Status response = Status.newBuilder().setCode(1).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
+
+        String userName = dJwt.getClaim("username").asString();
+
+        StringJoiner joiner = new StringJoiner("_");
+        String key = joiner.add("vote").add(request.getElectionName()).add(request.getChoiceName()).add(userName).toString(); // vote_electionName_choiceName_userName
+
+        if (Globals.store.get(key) != null) {
+            // A previous vote has been cast.
+            Status response = Status.newBuilder().setCode(4).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
+
+        Globals.store.put(key, new byte[0]);
+
+        Status response = Status.newBuilder().setCode(0).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
