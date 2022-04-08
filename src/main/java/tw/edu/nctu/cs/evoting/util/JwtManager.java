@@ -68,8 +68,7 @@ public class JwtManager {
     public DecodedJWT decodedJWT(String token) {
         try {
             // Verifier will check whether its issuer is me and also check whether it has been expired or not.
-            DecodedJWT jwt = verifier.verify(token);
-            return jwt;
+            return verifier.verify(token);
         } catch (Throwable cause) {
             logger.trace("JWT token validation failed", cause);
             return null;
