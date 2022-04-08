@@ -3,6 +3,7 @@ package tw.edu.nctu.cs.evoting.util;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,25 +42,37 @@ public class JwtManager {
                 .build();
     }
 
-    public String nextToken() {
+    public String nextToken(String userName) {
         final Instant now = Instant.now();
         final int un2 = ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE) & 0x7fffffff;
         return JWT.create()
                 .withIssuer(issuer)
                 .withIssuedAt(Date.from(now))
                 .withExpiresAt(Date.from(now.plus(validSeconds, ChronoUnit.SECONDS)))
+                .withClaim("username", userName)
                 .withClaim(CLAIM_NAME_UNIQUIFIER, un2)
                 .sign(algorithm);
     }
 
-    public boolean validateID(String id) {
+    public boolean validateToken(String token) {
         try {
             // Verifier will check whether its issuer is me and also check whether it has been expired or not.
-            verifier.verify(id);
+            verifier.verify(token);
             return true;
         } catch (Throwable cause) {
             logger.trace("JWT token validation failed", cause);
             return false;
+        }
+    }
+
+    public DecodedJWT decodedJWT(String token) {
+        try {
+            // Verifier will check whether its issuer is me and also check whether it has been expired or not.
+            DecodedJWT jwt = verifier.verify(token);
+            return jwt;
+        } catch (Throwable cause) {
+            logger.trace("JWT token validation failed", cause);
+            return null;
         }
     }
 }
