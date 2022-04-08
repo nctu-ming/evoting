@@ -69,7 +69,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
             voter = Voter.parseFrom(voterInfoBytes);
         } catch (Exception e) {
             logger.info(e.toString()); // TODO: Refactor
-            AuthToken response = AuthToken.newBuilder().setValue(ByteString.copyFromUtf8("")).build();
+            AuthToken response = AuthToken.newBuilder().setValue(ByteString.copyFromUtf8("verification failed")).build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         }
