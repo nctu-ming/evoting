@@ -7,6 +7,7 @@ import com.goterl.lazysodium.SodiumJava;
 import io.grpc.stub.StreamObserver;
 import tw.edu.nctu.cs.evoting.dao.UserDao;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -111,6 +112,15 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
         if(request.getChoicesList().size() == 0 || request.getGroupsList().size() == 0) {
             // Missing groups or choices specification (at least one group and one choice should be listed for the election)
             Status response = Status.newBuilder().setCode(2).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
+
+        Instant endDate = Instant.ofEpochSecond(request.getEndDate().getSeconds(), request.getEndDate().getNanos());
+        if(endDate.isBefore(Instant.now())) {
+            // The election end date is in the past
+            Status response = Status.newBuilder().setCode(3).build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
             return;
