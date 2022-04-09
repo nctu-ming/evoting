@@ -78,6 +78,16 @@
             <artifactId>java-jwt</artifactId>
             <version>3.19.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.iq80.leveldb</groupId>
+            <artifactId>leveldb</artifactId>
+            <version>0.12</version>
+        </dependency>
+        <dependency>
+            <groupId>org.iq80.leveldb</groupId>
+            <artifactId>leveldb-api</artifactId>
+            <version>0.12</version>
+        </dependency>
     </dependencies>
     <build>
         <extensions>
