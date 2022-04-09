@@ -94,7 +94,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
             return;
         }
 
-        String authToken = Globals.jwtManager.nextToken(userName);
+        String authToken = Globals.jwtManager.nextToken(userName, voter.getGroup());
 
         AuthToken response = AuthToken.newBuilder().setValue(ByteString.copyFromUtf8(authToken)).build();
         responseObserver.onNext(response);
@@ -129,10 +129,18 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
             return;
         }
 
-        // TODO: Check for duplicate elections
+        String electionName = request.getName();
+
+        if (Globals.store.get("election_" + electionName) != null) {
+            // duplicate elections
+            Status response = Status.newBuilder().setCode(3).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
+
         ElectionData electionData = ElectionData.newBuilder().setName(request.getName()).addAllChoices(request.getChoicesList()).addAllGroups(request.getGroupsList()).setEndDate(request.getEndDate()).setStatus(ElectionData.Status.ONGOING).build();
 
-        String electionName = request.getName();
         Globals.store.put("election_" + electionName, electionData.toByteArray());
 
         Status response = Status.newBuilder().setCode(0).build();
@@ -155,6 +163,28 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
         // TODO: Validate
         String userName = dJwt.getClaim("username").asString();
+        String userGroup = dJwt.getClaim("user_group").asString();
+
+        byte[] electionBytes = Globals.store.get("election_" + request.getElectionName());
+
+        ElectionData electionData;
+        try {
+             electionData = ElectionData.parseFrom(electionBytes);
+        } catch (Exception e) {
+            logger.error("ElectionData.parseFrom", e);
+            Status response = Status.newBuilder().setCode(2).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
+
+        if (!electionData.getGroupsList().contains(userGroup)) {
+            // The voter’s group is not allowed in the election
+            Status response = Status.newBuilder().setCode(3).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
 
         StringJoiner joiner = new StringJoiner("_");
         String key = joiner.add("vote").add(request.getElectionName()).add(request.getChoiceName()).add(userName).toString(); // vote_electionName_choiceName_userName
