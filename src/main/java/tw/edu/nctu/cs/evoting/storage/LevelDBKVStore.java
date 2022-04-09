@@ -21,12 +21,16 @@ public class LevelDBKVStore implements KVStore<String, byte[]>  {
 
     File dbFile = new File("db");
 
-    LevelDBKVStore() throws IOException {
+    public LevelDBKVStore() {
         Options options = new Options();
         options.createIfMissing(true);
 
-        factory.destroy(dbFile, options); // for lab 2
-        this.db = factory.open(dbFile, options);
+        try {
+            factory.destroy(dbFile, options); // for lab 2
+            this.db = factory.open(dbFile, options);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
