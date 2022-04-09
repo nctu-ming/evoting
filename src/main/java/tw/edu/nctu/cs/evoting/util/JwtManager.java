@@ -42,7 +42,7 @@ public class JwtManager {
                 .build();
     }
 
-    public String nextToken(String userName) {
+    public String nextToken(String userName, String userGroup) {
         final Instant now = Instant.now();
         final int un2 = ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE) & 0x7fffffff;
         return JWT.create()
@@ -50,6 +50,7 @@ public class JwtManager {
                 .withIssuedAt(Date.from(now))
                 .withExpiresAt(Date.from(now.plus(validSeconds, ChronoUnit.SECONDS)))
                 .withClaim("username", userName)
+                .withClaim("user_group", userGroup)
                 .withClaim(CLAIM_NAME_UNIQUIFIER, un2)
                 .sign(algorithm);
     }
