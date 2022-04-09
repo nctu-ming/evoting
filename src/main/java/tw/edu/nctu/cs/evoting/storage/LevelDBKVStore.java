@@ -8,9 +8,7 @@ import static org.iq80.leveldb.impl.Iq80DBFactory.*;
 import java.io.*;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 
 public class LevelDBKVStore implements KVStore<String, byte[]>  {
     private static final Logger logger = LoggerFactory.getLogger(LevelDBKVStore.class);

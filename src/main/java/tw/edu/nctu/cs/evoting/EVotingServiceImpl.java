@@ -1,20 +1,21 @@
 package tw.edu.nctu.cs.evoting;
 
-import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.protobuf.ByteString;
 import com.goterl.lazysodium.LazySodiumJava;
 import com.goterl.lazysodium.SodiumJava;
 import io.grpc.stub.StreamObserver;
+import org.slf4j.LoggerFactory;
 import tw.edu.nctu.cs.evoting.dao.UserDao;
 
 import java.time.Instant;
-import java.util.Objects;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.StringJoiner;
-import java.util.logging.Logger;
 
 class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
-    private static final Logger logger = Logger.getLogger(EVotingServiceImpl.class.getName());
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(EVotingServiceImpl.class);
+
     LazySodiumJava lazySodium = new LazySodiumJava(new SodiumJava());
 
     private final UserDao userDao = new UserDao(Globals.store);
@@ -76,7 +77,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
         try {
             voter = Voter.parseFrom(voterInfoBytes);
         } catch (Exception e) {
-            logger.info(e.toString()); // TODO: Refactor
+            logger.error("Voter.parseFrom", e); // TODO: Refactor
             AuthToken response = AuthToken.newBuilder().setValue(ByteString.copyFromUtf8("verification failed")).build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
@@ -129,9 +130,10 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
         }
 
         // TODO: Check for duplicate elections
+        ElectionData electionData = ElectionData.newBuilder().setName(request.getName()).addAllChoices(request.getChoicesList()).addAllGroups(request.getGroupsList()).setEndDate(request.getEndDate()).setStatus(ElectionData.Status.ONGOING).build();
 
         String electionName = request.getName();
-        Globals.store.put("election_" + electionName, request.toByteArray());
+        Globals.store.put("election_" + electionName, electionData.toByteArray());
 
         Status response = Status.newBuilder().setCode(0).build();
 
@@ -152,6 +154,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
             return;
         }
 
+        // TODO: Validate
         String userName = dJwt.getClaim("username").asString();
 
         StringJoiner joiner = new StringJoiner("_");
@@ -174,15 +177,50 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void getResult(ElectionName request, StreamObserver<ElectionResult> responseObserver) {
-        ElectionResult.Builder resultBuilder = ElectionResult.newBuilder().setStatus(200);
+        String electionName = request.getName();
 
-        VoteCount.Builder vcBuilder = VoteCount.newBuilder().setCount(123321).setChoiceName("Ming Wang").setToken(
-                AuthToken.newBuilder().setValue(ByteString.copyFromUtf8("test-auth-token"))
-        );
-        resultBuilder.addCount(vcBuilder);
+        byte[] electionBytes = Globals.store.get("election_" + electionName);
 
-        ElectionResult response = resultBuilder.build();
+        ElectionData electionData;
+        try {
+            electionData = ElectionData.parseFrom(electionBytes);
+        } catch (Exception e) {
+            logger.error("ElectionData.parseFrom", e);
+            ElectionResult response = ElectionResult.newBuilder().setStatus(1).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
 
+        Instant endDate = Instant.ofEpochSecond(electionData.getEndDate().getSeconds(), electionData.getEndDate().getNanos());
+        if (!endDate.isBefore(Instant.now())) {
+            // The election is still ongoing.
+            ElectionResult response = ElectionResult.newBuilder().setStatus(2).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
+
+        // Poll Opening (counting votes)
+        LinkedHashMap<String, Integer> resultMap = new LinkedHashMap<>();
+        for (String choice : electionData.getChoicesList()) {
+            StringJoiner joiner = new StringJoiner("_");
+            String prefix = joiner.add("vote").add(electionName).add(choice).toString(); // vote_electionName_choiceName_userName
+            int count = Globals.store.get(prefix).length;
+            resultMap.put(choice, count);
+        }
+
+        ElectionResult.Builder erBuilder = ElectionResult.newBuilder();
+        for (Map.Entry<String, Integer> entry: resultMap.entrySet()) {
+            VoteCount.Builder vcBuilder = VoteCount.newBuilder();
+            vcBuilder.setChoiceName(entry.getKey());
+            vcBuilder.setCount(entry.getValue());
+
+            erBuilder.addCount(vcBuilder.build());
+        }
+
+        erBuilder.setStatus(0);
+        ElectionResult response = erBuilder.build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }

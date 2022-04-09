@@ -70,10 +70,23 @@ message ElectionName {
 message VoteCount {
 	required string choice_name = 1;
 	required int32 count = 2;
-	required AuthToken token = 3;
 }
 
 message ElectionResult {
 	required int32 status = 1;
 	repeated VoteCount count = 2;
+}
+
+// Custom
+message ElectionData {
+	required string name = 1;
+	repeated string groups = 2;
+	repeated string choices = 3;
+	required google.protobuf.Timestamp end_date = 4;
+	enum Status {
+		ONGOING = 1;
+		OPENING = 2;
+		CLOSED = 3;
+	}
+	required Status status = 5;
 }

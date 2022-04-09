@@ -1,7 +1,6 @@
 package tw.edu.nctu.cs.evoting.storage;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConcurrentHashMapKVStore implements KVStore<String, byte[]> {
