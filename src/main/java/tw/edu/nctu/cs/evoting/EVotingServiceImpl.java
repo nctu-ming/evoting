@@ -206,7 +206,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
         for (String choice : electionData.getChoicesList()) {
             StringJoiner joiner = new StringJoiner("_");
             String prefix = joiner.add("vote").add(electionName).add(choice).toString(); // vote_electionName_choiceName_userName
-            int count = Globals.store.get(prefix).length;
+            int count = Globals.store.prefixScans(prefix).size();
             resultMap.put(choice, count);
         }
 
