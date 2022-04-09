@@ -201,6 +201,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
         }
 
         // Poll Opening (counting votes)
+        // TODO: Cache the opening result.
         LinkedHashMap<String, Integer> resultMap = new LinkedHashMap<>();
         for (String choice : electionData.getChoicesList()) {
             StringJoiner joiner = new StringJoiner("_");
