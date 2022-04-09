@@ -186,6 +186,15 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
             return;
         }
 
+        Instant endDate = Instant.ofEpochSecond(electionData.getEndDate().getSeconds(), electionData.getEndDate().getNanos());
+        if (endDate.isBefore(Instant.now())) {
+            // The election end date is in the past
+            Status response = Status.newBuilder().setCode(2).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
+
         StringJoiner joiner = new StringJoiner("_");
         String key = joiner.add("vote").add(request.getElectionName()).add(request.getChoiceName()).add(userName).toString(); // vote_electionName_choiceName_userName
 
