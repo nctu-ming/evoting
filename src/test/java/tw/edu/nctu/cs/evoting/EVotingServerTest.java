@@ -19,6 +19,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import tw.edu.nctu.cs.evoting.dao.UserDao;
 
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
 import static org.junit.Assert.*;
@@ -29,6 +30,15 @@ public class EVotingServerTest {
     private static final String temp_name = "test-name";
     private static final String temp_group = "test-group";
     private static final String temp_auth_token = "test-auth-token";
+    private final String testValuePrefix = "test-value-";
+
+    private static String genKey(String prefix, String suffix) {
+        return prefix + suffix;
+    }
+
+    private static byte[] getBytes(String prefix, String suffix) {
+        return (prefix + suffix).getBytes(StandardCharsets.UTF_8);
+    }
 
     /**
      * This rule manages automatic graceful shutdown for the registered servers and channels at the
@@ -63,6 +73,34 @@ public class EVotingServerTest {
         // Voter with the same name already exists
         Status response1 = blockingStub.registerVoter(request);
         assertEquals(1, response1.getCode());
+
+        Globals.store.clear();
+    }
+
+    @Test
+    public void EVotingServiceImpl_unregisterVoter() throws Exception {
+        // Generate a unique in-process server name.
+        String serverName = InProcessServerBuilder.generateName();
+
+        // Create a server, add service, start, and register for automatic graceful shutdown.
+        grpcCleanup.register(InProcessServerBuilder
+                .forName(serverName).directExecutor().addService(new EVotingServiceImpl()).build().start());
+
+        eVotingGrpc.eVotingBlockingStub blockingStub = eVotingGrpc.newBlockingStub(
+                grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build()));
+
+        // Put test data to store
+        Globals.store.put(UserDao.genUserKey(temp_name), getBytes(testValuePrefix, temp_name));
+
+        VoterName request = VoterName.newBuilder().setName(temp_name).build();
+
+        Status response = blockingStub.unregisterVoter(request);
+
+        assertEquals(0, response.getCode());
+        assertNull(Globals.store.get(UserDao.genUserKey(temp_name)));
+
+        Status response2 = blockingStub.unregisterVoter(request);
+        assertEquals(1, response2.getCode());
 
         Globals.store.clear();
     }

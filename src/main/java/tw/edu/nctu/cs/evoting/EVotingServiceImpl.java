@@ -48,8 +48,24 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void unregisterVoter(VoterName request, StreamObserver<Status> responseObserver) {
-        Status response = Status.newBuilder().setCode(200).build();
+        if (!request.isInitialized()) {
+            Status response = Status.newBuilder().setCode(2).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
 
+        // User does not exist
+        if (userDao.getUser(request.getName()) == null) {
+            Status response = Status.newBuilder().setCode(1).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
+
+        userDao.removeUser(request.getName());
+
+        Status response = Status.newBuilder().setCode(0).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
