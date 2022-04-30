@@ -90,3 +90,15 @@ message ElectionData {
 	}
 	required Status status = 5;
 }
+
+message KVRequest {
+	enum Command {
+		GET = 0;
+		PUT = 1;
+		DELETE = 2;
+		PREFIX_SCANS = 3;
+	}
+	required Command command = 1;
+	required string key = 2;
+	optional bytes value = 3;
+}
