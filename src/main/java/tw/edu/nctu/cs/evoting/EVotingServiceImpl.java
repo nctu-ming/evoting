@@ -243,6 +243,8 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void getResult(ElectionName request, StreamObserver<ElectionResult> responseObserver) {
+        logger.info("***GetResult***");
+
         String electionName = request.getName();
 
         byte[] electionBytes = store.get("election_" + electionName);
