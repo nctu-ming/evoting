@@ -34,6 +34,8 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void registerVoter(Voter request, StreamObserver<Status> responseObserver) {
+        logger.info("**registerVoter** was called by client");
+
         if (!request.isInitialized()) {
             Status response = Status.newBuilder().setCode(2).build();
             responseObserver.onNext(response);
@@ -60,6 +62,8 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void unregisterVoter(VoterName request, StreamObserver<Status> responseObserver) {
+        logger.info("**unregisterVoter** was called by client");
+
         if (!request.isInitialized()) {
             Status response = Status.newBuilder().setCode(2).build();
             responseObserver.onNext(response);
@@ -84,6 +88,8 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void preAuth(VoterName request, StreamObserver<Challenge> responseObserver) {
+        logger.info("**preAuth** was called by client");
+
         byte[] randomBytes = lazySodium.randomBytesBuf(16);
 
         Challenge response = Challenge.newBuilder().setValue(ByteString.copyFrom(randomBytes)).build();
@@ -96,6 +102,8 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void auth(AuthRequest request, StreamObserver<AuthToken> responseObserver) {
+        logger.info("**auth** was called by client");
+
         String userName = request.getName().getName();
 
         byte[] voterInfoBytes = userDao.getUser(userName);
@@ -131,6 +139,8 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void createElection(Election request, StreamObserver<Status> responseObserver) {
+        logger.info("**createElection** was called by client");
+
         String authToken = request.getToken().getValue().toStringUtf8();
         if(!jwtManager.validateToken(authToken)) {
             // Invalid authentication token
@@ -179,6 +189,8 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void castVote(Vote request, StreamObserver<Status> responseObserver) {
+        logger.info("**castVote** was called by client");
+
         String authToken = request.getToken().getValue().toStringUtf8();
         DecodedJWT dJwt = jwtManager.decodedJWT(authToken);
         if(dJwt == null) {
@@ -243,7 +255,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void getResult(ElectionName request, StreamObserver<ElectionResult> responseObserver) {
-        logger.info("***GetResult***");
+        logger.info("**GetResult** was called by client");
 
         String electionName = request.getName();
 
