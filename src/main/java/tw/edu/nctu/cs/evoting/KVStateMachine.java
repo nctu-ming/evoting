@@ -65,10 +65,17 @@ public class KVStateMachine extends BaseStateMachine {
 
         KVResponse kvResponse;
 
+        com.google.protobuf.ByteString dataByteString;
+
         if (kvReq.getCommand().equals(SIZE)) {
             kvResponse = KVResponse.newBuilder().setIntData(intData).build();
         } else {
-            kvResponse = KVResponse.newBuilder().setData(com.google.protobuf.ByteString.copyFrom(data)).build();
+            try {
+                dataByteString = com.google.protobuf.ByteString.copyFrom(data);
+                kvResponse = KVResponse.newBuilder().setData(dataByteString).build();
+            } catch (NullPointerException e) {
+                kvResponse = KVResponse.newBuilder().build();
+            }
         }
 
         return CompletableFuture.completedFuture(Message.valueOf(ByteString.copyFrom(kvResponse.toByteArray())));
