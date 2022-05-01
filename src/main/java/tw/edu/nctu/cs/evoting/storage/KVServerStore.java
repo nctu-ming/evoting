@@ -52,7 +52,7 @@ public class KVServerStore implements KVStore<String, byte[]>  {
 
     @Override
     public void put(String key, byte[] value) {
-        KVRequest kvRequest = KVRequest.newBuilder().setCommand(KVRequest.Command.PUT).setKey(key) .setKeyBytes(com.google.protobuf.ByteString.copyFrom(value)).build();
+        KVRequest kvRequest = KVRequest.newBuilder().setCommand(KVRequest.Command.PUT).setKey(key).setValue(com.google.protobuf.ByteString.copyFrom(value)).build();
         try {
             this.dbClient.io().send(Message.valueOf(ByteString.copyFrom(kvRequest.toByteArray())));
         } catch (Exception e) {
@@ -74,6 +74,10 @@ public class KVServerStore implements KVStore<String, byte[]>  {
         }
 
         assert kvResponse != null;
+        if (kvResponse.getData().isEmpty()) {
+            return null;
+        }
+
         return kvResponse.getData().toByteArray();
     }
 
