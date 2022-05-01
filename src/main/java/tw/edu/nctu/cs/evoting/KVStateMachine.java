@@ -14,6 +14,7 @@ import org.apache.ratis.statemachine.impl.SimpleStateMachineStorage;
 import org.apache.ratis.statemachine.impl.SingleFileSnapshotInfo;
 import org.apache.ratis.thirdparty.com.google.protobuf.ByteString;
 import org.apache.ratis.util.JavaUtils;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tw.edu.nctu.cs.evoting.storage.KVStore;
 import tw.edu.nctu.cs.evoting.storage.LevelDBKVStore;
@@ -27,17 +28,20 @@ import java.util.concurrent.CompletableFuture;
 import static tw.edu.nctu.cs.evoting.KVRequest.Command.SIZE;
 
 public class KVStateMachine extends BaseStateMachine {
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(KVStateMachine.class);
+    private static final Logger logger = LoggerFactory.getLogger(KVStateMachine.class);
 
     private final SimpleStateMachineStorage storage = new SimpleStateMachineStorage();
 
     private static final LevelDBKVStore store = new LevelDBKVStore(new File("./db/kvdb"));
+
+    String serverID;
 
     @Override
     public void initialize(RaftServer server, RaftGroupId groupId,
                            RaftStorage raftStorage) throws IOException {
         super.initialize(server, groupId, raftStorage);
         this.storage.init(raftStorage);
+        serverID = server.getId().toString();
     }
 
     @Override
@@ -48,6 +52,8 @@ public class KVStateMachine extends BaseStateMachine {
         } catch (InvalidProtocolBufferException e) {
             logger.error("KVRequest.parseFrom", e);
         }
+
+        logger.info("[{}]: {} {}", serverID, kvReq.getCommand(), kvReq.getKey());
 
         byte[] data = new byte[0];
         int intData = 0;
@@ -91,6 +97,8 @@ public class KVStateMachine extends BaseStateMachine {
         } catch (InvalidProtocolBufferException e) {
             logger.error("KVRequest.parseFrom", e);
         }
+
+        logger.info("[{}]: {} {}", serverID, kvReq.getCommand(), kvReq.getKey());
 
         // update the last applied term and index
         final long index = entry.getIndex();
