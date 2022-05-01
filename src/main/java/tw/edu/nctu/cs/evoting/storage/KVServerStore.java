@@ -143,6 +143,8 @@ public class KVServerStore implements KVStore<String, byte[]>  {
         Map<String, byte[]> newMap = retMap.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toByteArray()));
 
-        return (LinkedHashMap<String, byte[]>) newMap;
+        LinkedHashMap<String, byte[]> retLHMap = new LinkedHashMap<>(newMap);
+
+        return retLHMap;
     }
 }
