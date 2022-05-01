@@ -5,8 +5,12 @@ import com.google.protobuf.ByteString;
 import com.goterl.lazysodium.LazySodiumJava;
 import com.goterl.lazysodium.SodiumJava;
 import io.grpc.stub.StreamObserver;
+import org.apache.ratis.protocol.RaftGroup;
 import org.slf4j.LoggerFactory;
 import tw.edu.nctu.cs.evoting.dao.UserDao;
+import tw.edu.nctu.cs.evoting.storage.KVServerStore;
+import tw.edu.nctu.cs.evoting.storage.KVStore;
+import tw.edu.nctu.cs.evoting.util.JwtManager;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -18,7 +22,15 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     LazySodiumJava lazySodium = new LazySodiumJava(new SodiumJava());
 
-    private final UserDao userDao = new UserDao(Globals.store);
+    protected final JwtManager jwtManager = JwtManager.EVotingJwtManager();
+
+    protected KVStore<String, byte[]> store;
+    private final UserDao userDao;
+
+    EVotingServiceImpl(RaftGroup raftGroup) {
+        store = new KVServerStore(raftGroup);
+        userDao = new UserDao(store);
+    }
 
     @Override
     public void registerVoter(Voter request, StreamObserver<Status> responseObserver) {
@@ -76,7 +88,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
         Challenge response = Challenge.newBuilder().setValue(ByteString.copyFrom(randomBytes)).build();
 
-        Globals.store.put("user_challenge_" + request.getName().toString(), randomBytes);
+        store.put("user_challenge_" + request.getName().toString(), randomBytes);
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -100,7 +112,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
             return;
         }
 
-        byte[] challengeBytes = Globals.store.get("user_challenge_" + userName);
+        byte[] challengeBytes = store.get("user_challenge_" + userName);
         byte[] signatureBytes = request.getResponse().getValue().toByteArray();
 
         if (!lazySodium.cryptoSignVerifyDetached(signatureBytes, challengeBytes, challengeBytes.length, voter.getPublicKey().toByteArray())) {
@@ -110,7 +122,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
             return;
         }
 
-        String authToken = Globals.jwtManager.nextToken(userName, voter.getGroup());
+        String authToken = jwtManager.nextToken(userName, voter.getGroup());
 
         AuthToken response = AuthToken.newBuilder().setValue(ByteString.copyFromUtf8(authToken)).build();
         responseObserver.onNext(response);
@@ -120,7 +132,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
     @Override
     public void createElection(Election request, StreamObserver<Status> responseObserver) {
         String authToken = request.getToken().getValue().toStringUtf8();
-        if(!Globals.jwtManager.validateToken(authToken)) {
+        if(!jwtManager.validateToken(authToken)) {
             // Invalid authentication token
             Status response = Status.newBuilder().setCode(1).build();
             responseObserver.onNext(response);
@@ -147,7 +159,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
         String electionName = request.getName();
 
-        if (Globals.store.get("election_" + electionName) != null) {
+        if (store.get("election_" + electionName) != null) {
             // duplicate elections
             Status response = Status.newBuilder().setCode(3).build();
             responseObserver.onNext(response);
@@ -157,7 +169,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
         ElectionData electionData = ElectionData.newBuilder().setName(request.getName()).addAllChoices(request.getChoicesList()).addAllGroups(request.getGroupsList()).setEndDate(request.getEndDate()).setStatus(ElectionData.Status.ONGOING).build();
 
-        Globals.store.put("election_" + electionName, electionData.toByteArray());
+        store.put("election_" + electionName, electionData.toByteArray());
 
         Status response = Status.newBuilder().setCode(0).build();
 
@@ -168,7 +180,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
     @Override
     public void castVote(Vote request, StreamObserver<Status> responseObserver) {
         String authToken = request.getToken().getValue().toStringUtf8();
-        DecodedJWT dJwt = Globals.jwtManager.decodedJWT(authToken);
+        DecodedJWT dJwt = jwtManager.decodedJWT(authToken);
         if(dJwt == null) {
             // Invalid authentication token
             Status response = Status.newBuilder().setCode(1).build();
@@ -181,7 +193,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
         String userName = dJwt.getClaim("username").asString();
         String userGroup = dJwt.getClaim("user_group").asString();
 
-        byte[] electionBytes = Globals.store.get("election_" + request.getElectionName());
+        byte[] electionBytes = store.get("election_" + request.getElectionName());
 
         ElectionData electionData;
         try {
@@ -214,7 +226,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
         StringJoiner joiner = new StringJoiner("_");
         String key = joiner.add("vote").add(request.getElectionName()).add(request.getChoiceName()).add(userName).toString(); // vote_electionName_choiceName_userName
 
-        if (Globals.store.get(key) != null) {
+        if (store.get(key) != null) {
             // A previous vote has been cast.
             Status response = Status.newBuilder().setCode(4).build();
             responseObserver.onNext(response);
@@ -222,7 +234,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
             return;
         }
 
-        Globals.store.put(key, new byte[0]);
+        store.put(key, new byte[0]);
 
         Status response = Status.newBuilder().setCode(0).build();
         responseObserver.onNext(response);
@@ -233,7 +245,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
     public void getResult(ElectionName request, StreamObserver<ElectionResult> responseObserver) {
         String electionName = request.getName();
 
-        byte[] electionBytes = Globals.store.get("election_" + electionName);
+        byte[] electionBytes = store.get("election_" + electionName);
 
         ElectionData electionData;
         try {
@@ -261,7 +273,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
         for (String choice : electionData.getChoicesList()) {
             StringJoiner joiner = new StringJoiner("_");
             String prefix = joiner.add("vote").add(electionName).add(choice).toString(); // vote_electionName_choiceName_userName
-            int count = Globals.store.prefixScans(prefix).size();
+            int count = store.prefixScans(prefix).size();
             resultMap.put(choice, count);
         }
 

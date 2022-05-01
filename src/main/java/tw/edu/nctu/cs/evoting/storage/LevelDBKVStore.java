@@ -1,5 +1,6 @@
 package tw.edu.nctu.cs.evoting.storage;
 
+import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,16 +16,17 @@ public class LevelDBKVStore implements KVStore<String, byte[]>  {
 
     protected DB db;
 
+    private File dbFile;
+
     private boolean isClosed = false;
 
-    File dbFile = new File("db");
+    public LevelDBKVStore(File dbFile) {
+        this.dbFile = dbFile;
 
-    public LevelDBKVStore() {
         Options options = new Options();
         options.createIfMissing(true);
 
         try {
-            factory.destroy(dbFile, options); // for lab 2
             this.db = factory.open(dbFile, options);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -71,7 +73,9 @@ public class LevelDBKVStore implements KVStore<String, byte[]>  {
     @Override
     public void close() {
         try {
+            // TODO: race condition
             this.db.close();
+            isClosed = true;
         } catch (IOException e) {
             logger.error("close", e);
         }
@@ -101,6 +105,25 @@ public class LevelDBKVStore implements KVStore<String, byte[]>  {
                 }
 
                 result.put(key, iterator.peekNext().getValue());
+            }
+
+            return result;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // Not good
+    public LinkedHashMap<String, ByteString> prefixScansForKVS(String prefix) {
+        try (DBIterator iterator = db.iterator()) {
+            LinkedHashMap<String, ByteString> result = new LinkedHashMap<>();
+            for (iterator.seek(bytes(prefix)); iterator.hasNext(); iterator.next()) {
+                String key = asString(iterator.peekNext().getKey());
+                if (!key.startsWith(prefix)) {
+                    break;
+                }
+
+                result.put(key, ByteString.copyFrom(iterator.peekNext().getValue()));
             }
 
             return result;

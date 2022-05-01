@@ -3,6 +3,7 @@ package tw.edu.nctu.cs.evoting.storage;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -31,9 +32,11 @@ public class LevelDBKVStoreTest {
         return getBytes(prefix, suffix);
     }
 
+    File testDB = new File("testdb");
+
     @Test
     public void testGet() throws IOException {
-        LevelDBKVStore kv = new LevelDBKVStore();
+        LevelDBKVStore kv = new LevelDBKVStore(testDB);
 
         for (Integer i = 0; i < testPutSize; i++) {
             kv.db.put(
@@ -49,11 +52,14 @@ public class LevelDBKVStoreTest {
         byte[] value2 = kv.get("key-not-exists");
 
         Assert.assertNull(value2);
+
+        kv.clear();
+        kv.close();
     }
 
     @Test
     public void testDelete() throws IOException {
-        LevelDBKVStore kv = new LevelDBKVStore();
+        LevelDBKVStore kv = new LevelDBKVStore(testDB);
 
         for (Integer i = 0; i < testPutSize; i++) {
             kv.db.put(
@@ -67,11 +73,13 @@ public class LevelDBKVStoreTest {
 
         assertEquals(testPutSize - 1, kv.size());
         assertNull(kv.db.get(genKeyBytes(testKeyPrefix, String.valueOf(1))));
+
+        kv.close();
     }
 
     @Test
     public void testSize() throws IOException {
-        LevelDBKVStore kv = new LevelDBKVStore();
+        LevelDBKVStore kv = new LevelDBKVStore(testDB);
 
         for (Integer i = 0; i < testPutSize; i++) {
             kv.put(
@@ -85,11 +93,14 @@ public class LevelDBKVStoreTest {
         kv.delete(genKey(testKeyPrefix, String.valueOf(1)));
 
         assertEquals(testPutSize - 1, kv.size());
+
+        kv.clear();
+        kv.close();
     }
 
     @Test
     public void testClear() throws IOException {
-        LevelDBKVStore kv = new LevelDBKVStore();
+        LevelDBKVStore kv = new LevelDBKVStore(testDB);
 
         for (Integer i = 0; i < testPutSize; i++) {
             kv.put(
@@ -101,11 +112,13 @@ public class LevelDBKVStoreTest {
         kv.clear();
 
         assertEquals(0, kv.size());
+
+        kv.close();
     }
 
     @Test
     public void testPut() throws IOException {
-        LevelDBKVStore kv = new LevelDBKVStore();
+        LevelDBKVStore kv = new LevelDBKVStore(testDB);
 
         for (Integer i = 0; i < testPutSize; i++) {
             kv.put(
@@ -125,11 +138,14 @@ public class LevelDBKVStoreTest {
         byte[] value = kv.db.get(genKeyBytes(testKeyPrefix, String.valueOf(1)));
 
         Assert.assertArrayEquals(value, getBytes(testValuePrefix, String.valueOf(1)));
+
+        kv.clear();
+        kv.close();
     }
 
     @Test
     public void testPrefixScans() throws IOException {
-        LevelDBKVStore kv = new LevelDBKVStore();
+        LevelDBKVStore kv = new LevelDBKVStore(testDB);
 
         for (Integer i = 0; i < testPutSize; i++) {
             if (i % 2 == 0) {
@@ -148,5 +164,8 @@ public class LevelDBKVStoreTest {
         LinkedHashMap<String, byte[]> result = kv.prefixScans(testKeyForPrefixScans);
 
         assertEquals(testPutSize / 2, result.size());
+
+        kv.clear();
+        kv.close();
     }
 }

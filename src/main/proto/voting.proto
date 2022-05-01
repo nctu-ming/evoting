@@ -97,8 +97,18 @@ message KVRequest {
 		PUT = 1;
 		DELETE = 2;
 		PREFIX_SCANS = 3;
+		SIZE = 4;
 	}
 	required Command command = 1;
 	required string key = 2;
 	optional bytes value = 3;
+}
+
+message MapMessage {
+	map<string, bytes> m = 1;
+}
+
+message KVResponse {
+	optional bytes data = 1;
+	optional int32 intData = 2;
 }
