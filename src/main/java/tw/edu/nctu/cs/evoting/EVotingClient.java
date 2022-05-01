@@ -1,13 +1,12 @@
 package tw.edu.nctu.cs.evoting;
 
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Scanner;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
-import io.grpc.Channel;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.StatusRuntimeException;
+import io.grpc.*;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +28,7 @@ public class EVotingClient {
 
     public static final int testVoterNum = 5;
 
-    private static String name = "test-name";
+    private static String name = "TeamB";
     private static byte[] priKey;
     private static byte[] auth_token;
     public static Key[] pubKeys;
@@ -185,7 +184,8 @@ public class EVotingClient {
         System.out.println("2: CreateElection");
         System.out.println("3: CastVote");
         System.out.println("4: GetResult");
-        System.out.println("5: Exit");
+//        System.out.println("5: Change target");
+        System.out.println("6: Exit");
         System.out.print(">");
     }
 
@@ -231,34 +231,50 @@ public class EVotingClient {
      */
     public static void main(String[] args) throws Exception {
         boolean testmode = false;
+        Scanner scanner = new Scanner(System.in);
         // Access a service running on the local machine on port 50051
-        String target = "localhost:50051";
+//        String target = "localhost:50051";
+//        System.out.println("Access a service running on the " + target + "...");
+
         // Allow passing in the user and target strings as command line arguments
-        if (args.length > 0) {
-            if ("--help".equals(args[0])) {
-                System.err.println("Usage: [name [target]]");
-                System.err.println();
-                System.err.println("  name    Your name. Defaults to " + name);
-                System.err.println("  target  The server to connect to. Defaults to " + target);
-                System.exit(1);
-            }
-            name = args[0];
-        }
-        if (args.length > 1) {
-            target = args[1];
-        }
+//        if (args.length > 0) {
+//            if ("--help".equals(args[0])) {
+//                System.err.println("Usage: [name [target]]");
+//                System.err.println();
+//                System.err.println("  name    Your name. Defaults to " +  name);
+//                System.err.println("  target  The server to connect to. Defaults to " + target);
+//                System.exit(1);
+//            }
+//            name = args[0];
+//        }
+//        if (args.length > 1) {
+//            target = args[1];
+//        }
+
+        NameResolver.Factory nameResolverFactory = new MultiAddressNameResolverFactory(
+                new InetSocketAddress("127.0.0.1", 50050),
+                new InetSocketAddress("127.0.0.1", 50051),
+                new InetSocketAddress("127.0.0.1", 50052)
+        );
+        String target = "localhost:50050";
 
         // Create a communication channel to the server, known as a Channel. Channels are thread-safe
         // and reusable. It is common to create channels at the beginning of your application and reuse
         // them until the application shuts down.
+
+        // connect multiple address
+//        ManagedChannel channel = ManagedChannelBuilder.forTarget("service")
+//                .nameResolverFactory(nameResolverFactory)
+//                .defaultLoadBalancingPolicy("round_robin")
+//                .usePlaintext()
+//                .build();
+
+        // connect one address
         ManagedChannel channel = ManagedChannelBuilder.forTarget(target)
-                // Channels are secure by default (via SSL/TLS). For the example we disable TLS to avoid
-                // needing certificates.
                 .usePlaintext()
                 .build();
         try {
             EVotingClient client = new EVotingClient(channel);
-
             // create test voters
             if(testmode){
                 testVoterNames = new String[testVoterNum];
@@ -283,14 +299,27 @@ public class EVotingClient {
                 }
             }
             else{
-                KeyPair KP = lazySodium.cryptoSignKeypair();
-                Key PK = KP.getPublicKey();
-                Key SK = KP.getSecretKey();
-                priKey = SK.getAsBytes();
-                client.RegisterVoter(name, "test-group", PK.getAsBytes());
+//                KeyPair KP = lazySodium.cryptoSignKeypair();
+//                Key PK = KP.getPublicKey();
+//                Key SK = KP.getSecretKey();
+//                priKey = SK.getAsBytes();
+//                int b64_maxlen = lazySodium.getSodium().sodium_base64_encoded_len(priKey.length, 1);
+//                byte[] b64 = new byte[b64_maxlen];
+//                String PKbase64 = lazySodium.getSodium().sodium_bin2base64(b64, b64_maxlen, PK.getAsBytes(), PK.getAsBytes().length, 1);
+//                String SKbase64 = lazySodium.getSodium().sodium_bin2base64(b64, b64_maxlen, priKey, priKey.length, 1);
+//                System.out.println(PKbase64);
+//                System.out.println(SKbase64);
+                byte[] ignore = new byte[]{0};
+                byte[] PubKey = new byte[64];
+                byte[] PriKey = new byte[64];
+                String PKbase64 = "fiqF70/mam+7TT+Tr0OP2u87I6grv/bdrgJ8ejYkT9w=";
+                String SKbase64 = "yWm+kRLuD3zECmdSYzSBgHZZY3GSDsXJI/qcRuntZNp+KoXvT+Zqb7tNP5OvQ4/a7zsjqCu/9t2uAnx6NiRP3A==";
+                lazySodium.getSodium().sodium_base642bin(PubKey,64, PKbase64.getBytes(StandardCharsets.UTF_8), PKbase64.getBytes(StandardCharsets.UTF_8).length, ignore, null, null, 1);
+                lazySodium.getSodium().sodium_base642bin(PriKey,64, SKbase64.getBytes(StandardCharsets.UTF_8), SKbase64.getBytes(StandardCharsets.UTF_8).length, ignore, null, null, 1);
+                priKey = PriKey;
+                client.RegisterVoter(name, "test-group", PubKey);
             }
 
-            Scanner scanner = new Scanner(System.in);
             int testVoterIndex = 0;
             if(testmode){
 //                client.registerAllVoters(client);
@@ -306,7 +335,7 @@ public class EVotingClient {
                 System.out.println("Input error! Please input again.");
                 scanner.next();
             }
-            while(input != 5){
+            while(input != 6){
                 if(input == 0){
                     continue;
                 }
@@ -347,7 +376,18 @@ public class EVotingClient {
                         System.out.println("Choice name: " + result.getCount(i).getChoiceName() + ", Choice count: " + result.getCount(i).getCount());
                     }
                 }
-                else if(input > 5){
+//                else if(input == 5){
+//                    System.out.print("Please input the target >");
+//                    String tar = scanner.next();
+//                    target = tar;
+//                    channel = ManagedChannelBuilder.forTarget(target)
+//                            // Channels are secure by default (via SSL/TLS). For the example we disable TLS to avoid
+//                            // needing certificates.
+//                            .usePlaintext()
+//                            .build();
+
+//                }
+                else if(input > 6){
                     System.out.println("Input error! Please input again.");
                 }
                 else if(input > 0 && auth_token != null){
