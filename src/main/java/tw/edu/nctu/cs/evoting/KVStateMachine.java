@@ -36,12 +36,16 @@ public class KVStateMachine extends BaseStateMachine {
 
     String serverID;
 
+    RaftServer server;
+
     @Override
     public void initialize(RaftServer server, RaftGroupId groupId,
                            RaftStorage raftStorage) throws IOException {
         super.initialize(server, groupId, raftStorage);
         this.storage.init(raftStorage);
         serverID = server.getId().toString();
+
+        this.server = server;
     }
 
     @Override
@@ -53,7 +57,7 @@ public class KVStateMachine extends BaseStateMachine {
             logger.error("KVRequest.parseFrom", e);
         }
 
-        logger.info("[{}]: {} {}", serverID, kvReq.getCommand(), kvReq.getKey());
+        //logger.info("[{}]: {} {}", serverID, kvReq.getCommand(), kvReq.getKey());
 
         byte[] data = new byte[0];
         int intData = 0;
@@ -98,7 +102,7 @@ public class KVStateMachine extends BaseStateMachine {
             logger.error("KVRequest.parseFrom", e);
         }
 
-        logger.info("[{}]: {} {}", serverID, kvReq.getCommand(), kvReq.getKey());
+        // logger.info("[{}]: {} {}", serverID, kvReq.getCommand(), kvReq.getKey());
 
         // update the last applied term and index
         final long index = entry.getIndex();
