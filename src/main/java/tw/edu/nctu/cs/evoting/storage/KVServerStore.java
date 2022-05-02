@@ -9,21 +9,16 @@ import org.apache.ratis.protocol.Message;
 import org.apache.ratis.protocol.RaftClientReply;
 import org.apache.ratis.protocol.RaftGroup;
 import org.apache.ratis.thirdparty.com.google.protobuf.ByteString;
-import org.iq80.leveldb.DB;
-import org.iq80.leveldb.DBIterator;
-import org.iq80.leveldb.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tw.edu.nctu.cs.evoting.*;
+import tw.edu.nctu.cs.evoting.KVRequest;
+import tw.edu.nctu.cs.evoting.KVResponse;
+import tw.edu.nctu.cs.evoting.MapMessage;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.iq80.leveldb.impl.Iq80DBFactory.*;
 
 public class KVServerStore implements KVStore<String, byte[]>  {
     private static final Logger logger = LoggerFactory.getLogger(KVServerStore.class);
