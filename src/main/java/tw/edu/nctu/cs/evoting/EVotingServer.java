@@ -27,6 +27,10 @@ public class EVotingServer {
         // VotingService
         final VotingService server = new VotingService(configPath, kvServer.RAFT_GROUP);
         server.start();
+
+        // Import Voters
+        Utils.importVoters(server.port);
+
         server.blockUntilShutdown();
     }
 }

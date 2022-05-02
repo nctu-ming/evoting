@@ -18,7 +18,7 @@ public class VotingService {
 
     RaftGroup raftGroup;
 
-    int port = -1;
+    public int port = -1;
 
     VotingService(String configPath, RaftGroup raftGroup) {
         Globals.parseConfig(configPath, properties);
