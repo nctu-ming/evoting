@@ -34,8 +34,6 @@ class VotingServiceImpl extends eVotingGrpc.eVotingImplBase {
 
     @Override
     public void registerVoter(Voter request, StreamObserver<Status> responseObserver) {
-        logger.info("**registerVoter** was called by client");
-
         if (!request.isInitialized()) {
             Status response = Status.newBuilder().setCode(2).build();
             responseObserver.onNext(response);

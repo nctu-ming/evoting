@@ -24,10 +24,7 @@ public class Utils {
             status = blockingStub.registerVoter(voter);
         } catch (StatusRuntimeException e) {
             logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
-            return;
         }
-
-        logger.info("RegisterVoter " + name + ", status: " + status.getCode());
     }
 
     public static void importVoters(int serverPort) {
