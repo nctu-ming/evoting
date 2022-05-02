@@ -11,7 +11,7 @@ The goal of the project is to develop a remote electronic voting system.
 ## 編譯 Jar
 
 ```
-~$ git clone https://github.com/nctu-ming/evoting && cd evoting
+~$ git clone -b part3 --single-branch https://github.com/nctu-ming/evoting && cd evoting
 ~$ mvn package
 ...
 [INFO] BUILD SUCCESS
