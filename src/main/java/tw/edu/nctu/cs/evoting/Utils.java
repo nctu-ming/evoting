@@ -1,6 +1,8 @@
 package tw.edu.nctu.cs.evoting;
 
 import com.google.protobuf.ByteString;
+import com.goterl.lazysodium.LazySodiumJava;
+import com.goterl.lazysodium.SodiumJava;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
@@ -34,6 +36,7 @@ public class Utils {
                 .build();
 
         eVotingGrpc.eVotingBlockingStub blockingStub = eVotingGrpc.newBlockingStub(channel);
+        LazySodiumJava lazySodium = new LazySodiumJava(new SodiumJava());
 
         byte[] ignore = new byte[]{0};
         byte[] PubKey = new byte[64];
