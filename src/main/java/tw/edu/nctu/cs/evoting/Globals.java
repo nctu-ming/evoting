@@ -1,15 +1,8 @@
 package tw.edu.nctu.cs.evoting;
 
-import org.apache.ratis.protocol.RaftGroup;
-import tw.edu.nctu.cs.evoting.storage.KVServerStore;
-import tw.edu.nctu.cs.evoting.storage.KVStore;
-import tw.edu.nctu.cs.evoting.storage.LevelDBKVStore;
-import tw.edu.nctu.cs.evoting.util.JwtManager;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
-import java.util.UUID;
 
 public class Globals {
     public static void parseConfig(String confPath, Properties properties) {

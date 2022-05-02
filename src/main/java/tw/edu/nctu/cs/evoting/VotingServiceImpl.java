@@ -8,7 +8,7 @@ import io.grpc.stub.StreamObserver;
 import org.apache.ratis.protocol.RaftGroup;
 import org.slf4j.LoggerFactory;
 import tw.edu.nctu.cs.evoting.dao.UserDao;
-import tw.edu.nctu.cs.evoting.storage.KVServerStore;
+import tw.edu.nctu.cs.evoting.storage.KVServiceKVStore;
 import tw.edu.nctu.cs.evoting.storage.KVStore;
 import tw.edu.nctu.cs.evoting.util.JwtManager;
 
@@ -28,7 +28,7 @@ class VotingServiceImpl extends eVotingGrpc.eVotingImplBase {
     private final UserDao userDao;
 
     VotingServiceImpl(RaftGroup raftGroup) {
-        store = new KVServerStore(raftGroup);
+        store = new KVServiceKVStore(raftGroup);
         userDao = new UserDao(store);
     }
 

@@ -20,8 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class KVServerStore implements KVStore<String, byte[]>  {
-    private static final Logger logger = LoggerFactory.getLogger(KVServerStore.class);
+public class KVServiceKVStore implements KVStore<String, byte[]>  {
+    private static final Logger logger = LoggerFactory.getLogger(KVServiceKVStore.class);
 
     RaftClient dbClient;
 
@@ -38,7 +38,7 @@ public class KVServerStore implements KVStore<String, byte[]>  {
         return builder.build();
     }
 
-    public KVServerStore(RaftGroup raftGroup) {
+    public KVServiceKVStore(RaftGroup raftGroup) {
         dbClient = buildClient(raftGroup);
     }
 
