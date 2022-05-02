@@ -15,10 +15,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 
-public class KVServer implements Closeable {
+public class KVService implements Closeable {
     private static final Logger logger = Logger.getLogger(EVotingServer.class.getName());
 
-    private final RaftServer server;
+    public final RaftServer server;
 
     private Integer SERVER_INDEX;
 
@@ -60,7 +60,7 @@ public class KVServer implements Closeable {
         }
     }
 
-    public KVServer(String configPath) throws IOException {
+    public KVService(String configPath) throws IOException {
         Globals.parseConfig(configPath, properties);
 
         init();
@@ -95,7 +95,7 @@ public class KVServer implements Closeable {
 
     public void start() throws IOException {
         server.start();
-        logger.info("KVServer started, listening on " + NetUtils.createSocketAddr(PEERS.get(SERVER_INDEX).getAddress()).getPort());
+        logger.info("KVService started, listening on " + NetUtils.createSocketAddr(PEERS.get(SERVER_INDEX).getAddress()).getPort());
     }
 
     @Override

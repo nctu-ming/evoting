@@ -17,8 +17,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 
-class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(EVotingServiceImpl.class);
+class VotingServiceImpl extends eVotingGrpc.eVotingImplBase {
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(VotingServiceImpl.class);
 
     LazySodiumJava lazySodium = new LazySodiumJava(new SodiumJava());
 
@@ -27,7 +27,7 @@ class EVotingServiceImpl extends eVotingGrpc.eVotingImplBase {
     protected KVStore<String, byte[]> store;
     private final UserDao userDao;
 
-    EVotingServiceImpl(RaftGroup raftGroup) {
+    VotingServiceImpl(RaftGroup raftGroup) {
         store = new KVServerStore(raftGroup);
         userDao = new UserDao(store);
     }

@@ -1,9 +1,7 @@
 package tw.edu.nctu.cs.evoting.storage;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import tw.edu.nctu.cs.evoting.KVServer;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,13 +1,6 @@
 package tw.edu.nctu.cs.evoting;
 
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
-import tw.edu.nctu.cs.evoting.storage.KVServerStore;
-
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -27,12 +20,12 @@ public class EVotingServer {
 
         String configPath = args[0];
 
-        // KVServer
-        final KVServer kvServer = new KVServer(configPath);
+        // KVService
+        final KVService kvServer = new KVService(configPath);
         kvServer.start();
 
-        // AppServer
-        final AppServer server = new AppServer(configPath, kvServer.RAFT_GROUP);
+        // VotingService
+        final VotingService server = new VotingService(configPath, kvServer.RAFT_GROUP);
         server.start();
         server.blockUntilShutdown();
     }
