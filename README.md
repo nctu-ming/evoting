@@ -42,14 +42,15 @@ kv.server.root.storage.path=kv_storage
 
 `/evoting/config/client/` 有放置 sample 的 config 設定檔。
 
-target0、target1、target3 分別代表三台 server node。
+hostname0:port0、hostname1:port1 分別代表其中兩台 server node。
 
 特別注意這裡填的是 `app.server.port` 的 HostIP:HostPort 資訊（並非 kv.server.address.list）的設定資訊。
 
 ```
-server.target0=127.0.0.1:50050
-server.target1=127.0.0.1:50051
-server.target2=127.0.0.1:50052
+server.hostname0 = 127.0.0.1
+server.port0 = 50050
+server.hostname1 = 127.0.0.1
+server.port1 = 50051
 ```
 
 ## 執行 E-Voting Server
