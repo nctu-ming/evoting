@@ -32,16 +32,23 @@ public class EVotingClient {
     private static byte[] auth_token;
 
     private final eVotingGrpc.eVotingBlockingStub blockingStub;
-    private final eVotingGrpc.eVotingBlockingStub blockingStub_backup;
+//    private final eVotingGrpc.eVotingBlockingStub blockingStub_backup;
 
     /** Construct client for accessing HelloWorld server using the existing channel. */
-    public EVotingClient(Channel channel0, Channel channel1) {
+//    public EVotingClient(Channel channel0, Channel channel1) {
+//        // 'channel' here is a Channel, not a ManagedChannel, so it is not this code's responsibility to
+//        // shut it down.
+//
+//        // Passing Channels to code makes code easier to test and makes it easier to reuse Channels.
+//        blockingStub = eVotingGrpc.newBlockingStub(channel0);
+//        blockingStub_backup = eVotingGrpc.newBlockingStub(channel1);
+//    }
+    public EVotingClient(Channel channel) {
         // 'channel' here is a Channel, not a ManagedChannel, so it is not this code's responsibility to
         // shut it down.
 
         // Passing Channels to code makes code easier to test and makes it easier to reuse Channels.
-        blockingStub = eVotingGrpc.newBlockingStub(channel0);
-        blockingStub_backup = eVotingGrpc.newBlockingStub(channel1);
+        blockingStub = eVotingGrpc.newBlockingStub(channel);
     }
 
 //    public Status RegisterVoter(String name, String group, byte[] pubKeyBytes) {
@@ -87,14 +94,14 @@ public class EVotingClient {
         try {
             challenge = blockingStub.preAuth(request);
         } catch (StatusRuntimeException e) {
-//            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
-            logger.info("target0 RPC failed, change to target1");
-            try {
-                challenge = blockingStub_backup.preAuth(request);
-            } catch(StatusRuntimeException e2){
-                logger.log(Level.WARNING, "RPC failed: {0}", e2.getStatus());
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+//            logger.info("target0 RPC failed, change to target1");
+//            try {
+//                challenge = blockingStub_backup.preAuth(request);
+//            } catch(StatusRuntimeException e2){
+//                logger.log(Level.WARNING, "RPC failed: {0}", e2.getStatus());
                 return null;
-            }
+//            }
         }
         logger.info(name + " PreAuth, Challenge: " + challenge.getValue());
         return challenge;
@@ -111,14 +118,14 @@ public class EVotingClient {
         try {
             token = blockingStub.auth(request);
         } catch (StatusRuntimeException e) {
-//            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
-            logger.info("target0 RPC failed, change to target1");
-            try {
-                token = blockingStub_backup.auth(request);
-            } catch(StatusRuntimeException e2){
-                logger.log(Level.WARNING, "RPC failed: {0}", e2.getStatus());
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+//            logger.info("target0 RPC failed, change to target1");
+//            try {
+//                token = blockingStub_backup.auth(request);
+//            } catch(StatusRuntimeException e2){
+//                logger.log(Level.WARNING, "RPC failed: {0}", e2.getStatus());
                 return null;
-            }
+//            }
         }
         logger.info(name + " Auth, Token value: " + token.getValue());
         return token;
@@ -133,14 +140,14 @@ public class EVotingClient {
         try {
             status = blockingStub.createElection(election);
         } catch (StatusRuntimeException e) {
-//            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
-            logger.info("target0 RPC failed, change to target1");
-            try {
-                status = blockingStub_backup.createElection(election);
-            } catch(StatusRuntimeException e2){
-                logger.log(Level.WARNING, "RPC failed: {0}", e2.getStatus());
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+//            logger.info("target0 RPC failed, change to target1");
+//            try {
+//                status = blockingStub_backup.createElection(election);
+//            } catch(StatusRuntimeException e2){
+//                logger.log(Level.WARNING, "RPC failed: {0}", e2.getStatus());
                 return null;
-            }
+//            }
         }
         StringBuilder groupString = new StringBuilder(" {");
         StringBuilder choiceString = new StringBuilder(" {");
@@ -165,14 +172,14 @@ public class EVotingClient {
         try {
             status = blockingStub.castVote(vote);
         } catch (StatusRuntimeException e) {
-//            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
-            logger.info("target0 RPC failed, change to target1");
-            try {
-                status = blockingStub_backup.castVote(vote);
-            } catch(StatusRuntimeException e2){
-                logger.log(Level.WARNING, "RPC failed: {0}", e2.getStatus());
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+//            logger.info("target0 RPC failed, change to target1");
+//            try {
+//                status = blockingStub_backup.castVote(vote);
+//            } catch(StatusRuntimeException e2){
+//                logger.log(Level.WARNING, "RPC failed: {0}", e2.getStatus());
                 return null;
-            }
+//            }
         }
         logger.info(name + " CastVote: {" + election_name + ", " + choice_name + "}, Vote Status: " + status.getCode());
         return status;
@@ -186,14 +193,14 @@ public class EVotingClient {
         try {
             result = blockingStub.getResult(vote);
         } catch (StatusRuntimeException e) {
-//            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
-            logger.info("target0 RPC failed, change to target1");
-            try {
-                result = blockingStub_backup.getResult(vote);
-            } catch(StatusRuntimeException e2){
-                logger.log(Level.WARNING, "RPC failed: {0}", e2.getStatus());
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+//            logger.info("target0 RPC failed, change to target1");
+//            try {
+//                result = blockingStub_backup.getResult(vote);
+//            } catch(StatusRuntimeException e2){
+//                logger.log(Level.WARNING, "RPC failed: {0}", e2.getStatus());
                 return null;
-            }
+//            }
         }
         StringBuilder resultString = new StringBuilder("GetResult " + election_name + ", Result Status: " + result.getStatus() + ", Result=");
         for(int i = 0; i < result.getCountList().size(); i++){
@@ -227,39 +234,41 @@ public class EVotingClient {
         Properties properties = new Properties();
         Globals.parseConfig(configPath, properties);
 
-//        String[] hostname = new String[3];
-//        int[] port = new int[3];
-//        for(int i = 0; i<3; i++){
-//            hostname[i] = properties.getProperty("server.hostname" + i);
-//            port[i] = Integer.parseInt(properties.getProperty("server.port" + i));
-//        }
+        String[] hostname = new String[3];
+        int[] port = new int[2];
+        for(int i = 0; i<2; i++){
+            hostname[i] = properties.getProperty("server.hostname" + i);
+            port[i] = Integer.parseInt(properties.getProperty("server.port" + i));
+        }
 
           // connect multiple address using load balancing
-//        NameResolver.Factory nameResolverFactory = new MultiAddressNameResolverFactory(
-//                new InetSocketAddress(hostname[0], port[0]),
-//                new InetSocketAddress(hostname[1], port[1]),
-//                new InetSocketAddress(hostname[2], port[2])
-//        );
-//        ManagedChannel channel = ManagedChannelBuilder.forTarget("service")
-//                .nameResolverFactory(nameResolverFactory)
-//                .defaultLoadBalancingPolicy("pick_first")
-//                .usePlaintext()
-//                .build();
+        NameResolver.Factory nameResolverFactory = new MultiAddressNameResolverFactory(
+                new InetSocketAddress(hostname[0], port[0]),
+                new InetSocketAddress(hostname[1], port[1])
+        );
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("service")
+                .nameResolverFactory(nameResolverFactory)
+                .defaultLoadBalancingPolicy("pick_first")
+                .usePlaintext()
+                .build();
 
         // connect two address
         // Create a communication channel to the server, known as a Channel. Channels are thread-safe
         // and reusable. It is common to create channels at the beginning of your application and reuse
         // them until the application shuts down.
-        String target0 = properties.getProperty("server.target0");
-        String target1 = properties.getProperty("server.target1");
-        ManagedChannel channel = ManagedChannelBuilder.forTarget(target0)
-                .usePlaintext()
-                .build();
-        ManagedChannel channel_backup = ManagedChannelBuilder.forTarget(target1)
-                .usePlaintext()
-                .build();
+//        String target0 = properties.getProperty("server.target0");
+//        String target1 = properties.getProperty("server.target1");
+//        String target0 = "159.223.72.221:51253";
+//        String target1 = "159.223.72.221:51253";
+//        ManagedChannel channel = ManagedChannelBuilder.forTarget(target0)
+//                .usePlaintext()
+//                .build();
+//        ManagedChannel channel_backup = ManagedChannelBuilder.forTarget(target1)
+//                .usePlaintext()
+//                .build();
         try {
-            EVotingClient client = new EVotingClient(channel, channel_backup);
+            EVotingClient client = new EVotingClient(channel);
+//            EVotingClient client = new EVotingClient(channel, channel_backup);
 //            KeyPair KP = lazySodium.cryptoSignKeypair();
 //            Key PK = KP.getPublicKey();
 //            Key SK = KP.getSecretKey();
@@ -346,7 +355,7 @@ public class EVotingClient {
             // resources the channel should be shut down when it will no longer be used. If it may be used
             // again leave it running.
             channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
-            channel_backup.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+//            channel_backup.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
         }
     }
 }
